@@ -20,13 +20,32 @@ namespace MvcMovie2.Controllers
         }
 
         // GET: Movies
-        public async Task<IActionResult> Index(string sortOrder)
+        public async Task<IActionResult> Index(string sortOrder, string searchString, int? pageNumber, string currentFilter)
         {
             ViewData["TitleSortParm"] = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
             ViewData["DateSortParm"] = sortOrder == "Date" ? "date_desc" : "Date";
             ViewData["PriceSortParm"] = sortOrder == "Price" ? "price_desc" : "Price";
+            ViewData["CurrentFilter"] = searchString;
+            ViewData["CurrentSort"] = sortOrder;
+
+            if (searchString != null)
+            {
+                pageNumber = 1;
+            }
+            else
+            {
+                searchString = currentFilter;
+            }
+
             var movies = from s in _context.Movies
                            select new { Movie = s, PriceAsDouble = (double)s.Price };
+
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                movies = movies.Where(s => s.Movie.Title.ToUpper().Contains(searchString.ToUpper())
+                                            || s.Movie.Genre.ToUpper().Contains(searchString.ToUpper()));
+            }
+
             switch (sortOrder)
             {
                 case "name_desc":
@@ -50,7 +69,9 @@ namespace MvcMovie2.Controllers
             }
 
             var movieList = movies.Select(m => m.Movie);
-            return View(await movieList.AsNoTracking().ToListAsync());
+
+            int pageSize = 3;
+            return View(await PaginatedList<Movie>.CreateAsync(movieList.AsNoTracking(), pageNumber ?? 1, pageSize));
         }
 
         // GET: Movies/Details/5
