@@ -1,0 +1,16 @@
+﻿@model IEnumerable<MvcMovie2.Models.Movie>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+
+@foreach(var movie in Model)
+{
+    @movie.Title <br /> <hr />
+}
